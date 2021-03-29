@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.mike.pexelsdemo">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application
+        android:name=".PexelsDemoApp"
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.PexelsDemo">
+        <activity
+            android:name=".ui.photoslist.PhotosListActivity"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.PexelsDemo.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".ui.photodetail.PhotoDetailActivity"
+            android:label="@string/title_photo_detail"
+            android:parentActivityName=".ui.photoslist.PhotosListActivity"
+            android:theme="@style/Theme.PexelsDemo.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.mike.pexelsdemo.ui.photoslist.PhotosListActivity" />
+        </activity>
+    </application>
+
+</manifest>

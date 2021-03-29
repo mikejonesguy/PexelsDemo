@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Pexels Demo</string>
+    <string name="title_photo_detail">Full-size Viewer</string>
+    <string name="content_description_image_thumbnail">A thumbnail of an image from Pexels.com</string>
+    <string name="content_description_image_full">A full-size image from Pexels.com</string>
+    <string name="search">Search</string>
+    <string name="app_info">App Info</string>
+    <string name="search_photos_hint">Search for photos</string>
+    <string name="photo_by">Photo by: %s</string>
+    <string name="provided_by_pexels">Photos provided by Pexels</string>
+    <string name="retry">Retry</string>
+    <string name="fetch_photos_error">Unable to retrieve photos</string>
+    <string name="hi_res_photo_error">Unable to display full-size photo</string>
+</resources>

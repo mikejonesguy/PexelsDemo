@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/photo_detail_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.photodetail.PhotoDetailFragment">
+
+    <com.github.piasy.biv.view.BigImageView
+        android:id="@+id/photo_detail_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:initScaleType="fitCenter"
+        app:optimizeDisplay="true"
+        app:thumbnailScaleType="fitCenter" />
+
+    <androidx.core.widget.ContentLoadingProgressBar
+        android:id="@+id/photo_detail_progress"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:indeterminateBehavior="cycle"
+        android:indeterminateOnly="true"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+</RelativeLayout>
