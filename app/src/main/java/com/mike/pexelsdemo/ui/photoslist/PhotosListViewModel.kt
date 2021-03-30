@@ -13,10 +13,26 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
 @HiltViewModel
 class PhotosListViewModel @Inject constructor(private val data: PexelsDataSource) : ViewModel() {
+
+    // tracks whether we should show a progress bar
+    private val _liveBusy: MutableLiveData<Boolean> = MutableLiveData()
+    val liveBusy: LiveData<Boolean> get() = _liveBusy
+
+    // tracks whether an error occurred
+    private val _liveError: MutableLiveData<Throwable?> = MutableLiveData()
+    val liveError: LiveData<Throwable?> get() = _liveError
+
+    // tracks our list of photos
+    private val _livePhotos: MutableLiveData<List<Photo>> = MutableLiveData()
+    val livePhotos: LiveData<List<Photo>> get() = _livePhotos
+
+    // the current search query from user input
+    var searchQuery: String? = null
 
     // our RxJava disposables (to be cleared when the view model is cleared)
     private val disposables = CompositeDisposable()
@@ -26,17 +42,6 @@ class PhotosListViewModel @Inject constructor(private val data: PexelsDataSource
 
     // the latest response from the API
     private var lastResponse: PhotosResponse? = null
-
-    private val _liveBusy: MutableLiveData<Boolean> = MutableLiveData()
-    val liveBusy: LiveData<Boolean> get() = _liveBusy
-
-    private val _liveError: MutableLiveData<Throwable?> = MutableLiveData()
-    val liveError: LiveData<Throwable?> get() = _liveError
-
-    private val _livePhotos: MutableLiveData<MutableList<Photo>> = MutableLiveData()
-    val livePhotos: LiveData<MutableList<Photo>> get() = _livePhotos
-
-    var searchQuery: String? = null
 
     override fun onCleared() {
         super.onCleared()
@@ -61,14 +66,14 @@ class PhotosListViewModel @Inject constructor(private val data: PexelsDataSource
 
         // choose the API -- search or curated
         val query = searchQuery
+        Log.d(TAG, "fetchPhotos: page=$page; query=$query")
         val op = if (query.isNullOrEmpty()) {
             data.getCuratedPhotos(page)
         } else {
             data.getSearchResults(page, query)
         }
 
-        _liveBusy.value = true
-        Log.d(TAG, "fetchPhotos: page=$page; query=$query")
+        _liveBusy.value = page == 1 // show progress for page 1 only
         val rx = op.subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .doFinally {
@@ -99,14 +104,14 @@ class PhotosListViewModel @Inject constructor(private val data: PexelsDataSource
         // preserve the existing list when requesting additional pages (page > 1)
         val merged = mutableListOf<Photo>()
         if (response.page > 1) {
-            // use the existing value from the live data; remove any "loading" values
+            // use the existing items from the live data; remove any "loading" items
             merged.addAll(_livePhotos.value?.filter { !it.isLoading() } ?: emptyList())
         }
 
         // append the values from the response to the end of the existing list
         merged.addAll(response.photos)
 
-        // if we have more pages available, add a dummy "loading" object at the end
+        // if we have more pages available, add a dummy "loading" item at the end
         if (hasMore()) merged.add(Photo.loadingPhoto)
 
         // notify the view of the updated list

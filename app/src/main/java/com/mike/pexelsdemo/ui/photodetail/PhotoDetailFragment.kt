@@ -6,14 +6,15 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ProgressBar
 import androidx.fragment.app.Fragment
 import com.github.piasy.biv.loader.ImageLoader
 import com.github.piasy.biv.view.BigImageView
 import com.github.piasy.biv.view.FrescoImageViewFactory
 import com.github.piasy.biv.view.ImageShownCallback
 import com.mike.pexelsdemo.R
+import com.mike.pexelsdemo.databinding.FragmentPhotoDetailBinding
 import com.mike.pexelsdemo.helper.SnackbarHelper
+import com.mike.pexelsdemo.helper.ViewHelper.setVisible
 import com.mike.pexelsdemo.model.Photo
 import java.io.File
 
@@ -23,32 +24,32 @@ import java.io.File
 class PhotoDetailFragment : Fragment() {
 
     private val item: Photo? by lazy { Photo.fromJson(arguments?.getString(ARG_PHOTO)) }
-    private lateinit var imageView: BigImageView
-    private lateinit var progressBar: ProgressBar
+    private var binding: FragmentPhotoDetailBinding? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_photo_detail, container, false)
+        binding = FragmentPhotoDetailBinding.inflate(inflater)
+        return binding?.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        // setup our view components
-        progressBar = view.findViewById(R.id.photo_detail_progress)
-        imageView = view.findViewById(R.id.photo_detail_image)
-        setupImageView(view)
-
-        // TODO - handle no photo (split pane before selection)
-
-        // load the image
+        setupImageView()
         showImage()
     }
 
-    private fun setupImageView(rootView: View) {
+    override fun onDestroy() {
+        binding?.photoDetailImage?.cancel()
+        binding = null
+        super.onDestroy()
+    }
+
+    private fun setupImageView() {
+        val imageView = binding?.photoDetailImage ?: return
+
         // for accessibility
         imageView.contentDescription = getString(R.string.content_description_image_full)
 
@@ -66,12 +67,14 @@ class PhotoDetailFragment : Fragment() {
 
             override fun onFail(error: Exception?) {
                 Log.w(TAG, "onFail", error)
+                if (isDetached) return
+                val root = binding?.root ?: return
 
                 // hide the progress bar
-                progressBar.visibility = View.GONE
+                binding?.photoDetailProgress?.hide()
 
                 // inform the user there was a problem
-                val parent = rootView.findViewById<ViewGroup>(R.id.photo_detail_layout)
+                val parent = root.findViewById<ViewGroup>(R.id.photo_detail_layout)
                 SnackbarHelper.showErrorSnackbar(
                     R.string.hi_res_photo_error,
                     parent
@@ -87,20 +90,26 @@ class PhotoDetailFragment : Fragment() {
 
             override fun onMainImageShown() {
                 // hide the progress bar now that we're displaying the main image
-                progressBar.visibility = View.GONE
+                binding?.photoDetailProgress?.hide()
                 Log.d(TAG, "main image shown")
             }
         })
     }
 
     fun showImage() {
-        val mainImageUrl = item?.src?.getBestFullUrl()
-        val thumbnailUrl = item?.src?.getBestThumbUrl()
+        val imageView = binding?.photoDetailImage ?: return
+        val item = item ?: return handleEmpty()
+        binding?.emptyView?.setVisible(false)
+
+        val mainImageUrl = item.src?.getBestFullUrl()
+        val thumbnailUrl = item.src?.getBestThumbUrl()
 
         // it's unlikely that either of these urls will be null or empty
         if (!mainImageUrl.isNullOrEmpty()) {
+            Log.d(TAG, "full-size image: ${item.width} x ${item.height}")
+
             // show the progress bar while we load
-            progressBar.visibility = View.VISIBLE
+            binding?.photoDetailProgress?.show()
 
             if (!thumbnailUrl.isNullOrEmpty()) {
                 // show the thumbnail first, since we should have it in cache
@@ -113,6 +122,10 @@ class PhotoDetailFragment : Fragment() {
             // this is an unexpected edge case, otherwise, we'd show an error here
             Log.w(TAG, "showImage: missing full-size url")
         }
+    }
+
+    private fun handleEmpty() {
+        binding?.emptyView?.setVisible(true)
     }
 
     companion object {

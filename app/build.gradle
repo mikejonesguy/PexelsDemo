@@ -8,6 +8,7 @@ plugins {
 android {
     compileSdkVersion 30
     buildToolsVersion "30.0.3"
+    //ndkVersion "22.1.7171670" // uncomment to strip native debug symbols
 
     defaultConfig {
         applicationId "com.mike.pexelsdemo"
@@ -18,7 +19,9 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
-
+    buildFeatures {
+        viewBinding true
+    }
     buildTypes {
         release {
             minifyEnabled false
@@ -26,8 +29,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility rootProject.java_version
+        targetCompatibility rootProject.java_version
     }
     kotlinOptions {
         jvmTarget = '1.8'
@@ -62,11 +65,8 @@ dependencies {
     implementation "io.reactivex.rxjava2:rxandroid:$rxjava2_android_version"
     implementation "io.reactivex.rxjava2:rxjava:$rxjava2_version"
 
-    // Image helpers - Fresco for loading, BigImageView for full-size viewing + subsampling
+    // Image helpers - Fresco for loading, BigImageViewer for full-size viewing + subsampling
     implementation "com.facebook.fresco:fresco:$fresco_version"
-    implementation "com.facebook.fresco:animated-gif:$fresco_version"
-    implementation "com.facebook.fresco:animated-webp:$fresco_version"
-    implementation "com.facebook.fresco:webpsupport:$fresco_version"
     implementation "com.github.piasy:BigImageViewer:$bigimage_version"
     implementation "com.github.piasy:FrescoImageLoader:$bigimage_version"
     implementation "com.github.piasy:FrescoImageViewFactory:$bigimage_version"
@@ -75,4 +75,7 @@ dependencies {
     testImplementation "junit:junit:$junit_version"
     androidTestImplementation "androidx.test.ext:junit:$junit_ext_version"
     androidTestImplementation "androidx.test.espresso:espresso-core:$espresso_version"
+
+    // Fresco additional - see: https://github.com/facebook/fresco/issues/2567
+    compileOnly "com.facebook.infer.annotation:infer-annotation:0.18.0"
 }

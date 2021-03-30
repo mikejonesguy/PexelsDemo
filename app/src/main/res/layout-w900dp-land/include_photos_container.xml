@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -11,21 +10,17 @@
     tools:context=".ui.photoslist.PhotosListActivity">
 
     <!-- This layout is a two-pane layout for the Items master/detail flow. -->
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/item_list"
+    <include layout="@layout/include_photos_list"
+        android:id="@+id/photos_layout"
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_weight="2"
-        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
-        app:spanCount="3"
-        tools:listitem="@layout/item_photo" />
+        android:layout_weight="3"/>
 
     <FrameLayout
         android:id="@+id/detail_container"
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_weight="3"
+        android:layout_weight="4"
         tools:layout="@layout/fragment_photo_detail"/>
 
 </LinearLayout>

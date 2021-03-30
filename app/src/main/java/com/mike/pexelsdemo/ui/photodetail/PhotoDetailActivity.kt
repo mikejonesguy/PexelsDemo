@@ -4,9 +4,8 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
 import com.mike.pexelsdemo.R
-import com.mike.pexelsdemo.helper.GsonHelper
+import com.mike.pexelsdemo.databinding.ActivityPhotoDetailBinding
 import com.mike.pexelsdemo.model.Photo
 import com.mike.pexelsdemo.ui.photoslist.PhotosListActivity
 
@@ -15,18 +14,23 @@ import com.mike.pexelsdemo.ui.photoslist.PhotosListActivity
  */
 class PhotoDetailActivity : AppCompatActivity() {
 
-    private val item: Photo? by lazy {
-        GsonHelper.tryParseJson(intent.getStringExtra(PhotoDetailFragment.ARG_PHOTO), Photo::class.java)
-    }
+    private lateinit var binding: ActivityPhotoDetailBinding
+
+    private val photoJson: String? by lazy { intent.getStringExtra(PhotoDetailFragment.ARG_PHOTO) }
+    private val photo: Photo? by lazy { Photo.fromJson(photoJson) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_photo_detail)
+        binding = ActivityPhotoDetailBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        val toolbar: Toolbar = findViewById(R.id.detail_toolbar)
-        setSupportActionBar(toolbar)
+        // configure the toolbar
+        setSupportActionBar(binding.detailToolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        toolbar.subtitle = getString(R.string.photo_by, item?.photographer ?: "unknown")
+
+        // show the photographer in the toolbar subtitle
+        val photog = photo?.photographer ?: getString(R.string.unknown)
+        binding.detailToolbar.subtitle = getString(R.string.photo_by, photog)
 
         // savedInstanceState is non-null on fragment re-creation (from orientation change, etc)
         // we only want to add the fragment on the first run, not on config changes
@@ -35,10 +39,7 @@ class PhotoDetailActivity : AppCompatActivity() {
             val fragment = PhotoDetailFragment().apply {
                 // copy the string extra from the intent to the fragment bundle
                 arguments = Bundle().apply {
-                    putString(
-                        PhotoDetailFragment.ARG_PHOTO,
-                        intent.getStringExtra(PhotoDetailFragment.ARG_PHOTO)
-                    )
+                    putString(PhotoDetailFragment.ARG_PHOTO, photoJson)
                 }
             }
 

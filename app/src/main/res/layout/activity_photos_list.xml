@@ -23,14 +23,15 @@
     </com.google.android.material.appbar.AppBarLayout>
 
     <FrameLayout
-        android:id="@+id/frameLayout"
+        android:id="@+id/frame_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <include layout="@layout/include_photos_list" />
+        <include layout="@layout/include_photos_container"
+            android:id="@+id/photos_container"/>
         <include layout="@layout/include_horizontal_progress"
-            android:id="@+id/horizontal_progress" />
+            android:id="@+id/progress_layout" />
     </FrameLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

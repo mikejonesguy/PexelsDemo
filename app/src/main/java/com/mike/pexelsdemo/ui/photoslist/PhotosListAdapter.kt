@@ -12,13 +12,22 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.mike.pexelsdemo.R
+import com.mike.pexelsdemo.helper.ViewHelper.setVisible
 import com.mike.pexelsdemo.model.Photo
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.roundToInt
 
+/**
+ * ListAdapter for [RecyclerView] in [PhotosListActivity]. Displays [Photo]s
+ * with a thumbnail image and photographer attribution.
+ */
 class PhotosListAdapter(
     private val listener: ItemClickListener,
     private val boundaryCallback: PagedList.BoundaryCallback<Photo>
 ) : ListAdapter<Photo, PhotosListAdapter.ViewHolder>(adapterDiffCallback) {
+
+    // allows the view to pause boundary callback events during transition scrolling
+    val pauseCallback = AtomicBoolean(false)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -32,7 +41,9 @@ class PhotosListAdapter(
         holder.bind(item)
 
         // notify the activity that we are nearing the end of the list
-        if (position >= itemCount - PREFETCH) boundaryCallback.onItemAtEndLoaded(item)
+        if (!pauseCallback.get() && position >= itemCount - PREFETCH) {
+            boundaryCallback.onItemAtEndLoaded(item)
+        }
     }
 
     @Suppress("MemberVisibilityCanBePrivate")
@@ -50,11 +61,10 @@ class PhotosListAdapter(
         fun bind(item: Photo) {
             data = item
             photographer.text = item.photographer
-            photographer.visibility =
-                if (item.photographer.isNullOrEmpty()) View.GONE else View.VISIBLE
+            photographer.setVisible(!item.photographer.isNullOrEmpty())
             val url = item.src?.getBestThumbUrl()
             image.setImageURI(if (url.isNullOrEmpty()) null else Uri.parse(url))
-            loading.visibility = if (data?.isLoading() == true) View.VISIBLE else View.GONE
+            loading.setVisible(data?.isLoading() == true)
         }
     }
 
@@ -63,16 +73,16 @@ class PhotosListAdapter(
     }
 
     companion object {
-        private const val PREFETCH = 10
+        private const val PREFETCH = 4
 
         // this callback is used when submitting updates to the list adapter
         private val adapterDiffCallback = object : DiffUtil.ItemCallback<Photo>() {
             override fun areContentsTheSame(oldItem: Photo, newItem: Photo): Boolean {
-                return areItemsTheSame(oldItem, newItem) && oldItem == newItem
+                return areItemsTheSame(oldItem, newItem)
             }
 
             override fun areItemsTheSame(oldItem: Photo, newItem: Photo): Boolean {
-                return oldItem.id == newItem.id && !oldItem.isLoading()
+                return oldItem.id == newItem.id && oldItem === newItem
             }
         }
     }

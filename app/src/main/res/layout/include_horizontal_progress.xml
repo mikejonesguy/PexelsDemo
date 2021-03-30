@@ -5,16 +5,14 @@
     android:id="@+id/loading"
     android:layout_width="match_parent"
     android:layout_height="4dp"
-    android:visibility="gone"
-    tools:ignore="UselessParent"
-    tools:visibility="visible">
+    tools:ignore="UselessParent">
 
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="48dp"
         android:layout_gravity="center_vertical">
 
-        <ProgressBar
+        <androidx.core.widget.ContentLoadingProgressBar
             android:id="@+id/horizontal_progress_bar"
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"

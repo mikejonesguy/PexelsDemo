@@ -11,7 +11,7 @@ class PexelsDemoApp : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        // Initialize the BigImageView library. This also initializes Fresco
+        // Initialize the BigImageViewer library. This also initializes Fresco
         // see: https://github.com/Piasy/BigImageViewer#initialize
         BigImageViewer.initialize(FrescoImageLoader.with(this))
     }

@@ -11,4 +11,7 @@
     <string name="retry">Retry</string>
     <string name="fetch_photos_error">Unable to retrieve photos</string>
     <string name="hi_res_photo_error">Unable to display full-size photo</string>
+    <string name="empty_detail">Select an image from the\nlist to display at full-size</string>
+    <string name="empty_results">No results found. Try\na different search.</string>
+    <string name="unknown">unknown</string>
 </resources>

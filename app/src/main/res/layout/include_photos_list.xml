@@ -1,10 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.recyclerview.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/item_list"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
-    app:spanCount="3"
-    tools:listitem="@layout/item_photo" />
+    android:layout_height="match_parent">
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/photos_list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+        app:spanCount="3"
+        tools:listitem="@layout/item_photo" />
+
+    <RelativeLayout
+        android:id="@+id/empty_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:paddingTop="128dp"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <ImageView
+            android:id="@+id/empty_image"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:src="@drawable/ic_search_144"
+            app:tint="#aaffffff"
+            tools:ignore="ContentDescription" />
+
+        <TextView
+            android:id="@+id/empty_message"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/empty_image"
+            android:layout_margin="16dp"
+            android:text="@string/empty_results"
+            android:textAlignment="center"
+            android:textSize="16sp"
+            android:textColor="#aaffffff"/>
+
+    </RelativeLayout>
+</RelativeLayout>

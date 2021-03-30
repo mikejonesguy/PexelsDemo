@@ -7,19 +7,23 @@ import android.view.*
 import android.widget.*
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
-import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.paging.PagedList
-import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.mike.pexelsdemo.R
+import com.mike.pexelsdemo.databinding.ActivityPhotosListBinding
 import com.mike.pexelsdemo.helper.SnackbarHelper
+import com.mike.pexelsdemo.helper.ViewHelper.setVisible
 import com.mike.pexelsdemo.model.Photo
 import com.mike.pexelsdemo.ui.photodetail.PhotoDetailActivity
 import com.mike.pexelsdemo.ui.photodetail.PhotoDetailFragment
 import dagger.hilt.android.AndroidEntryPoint
+import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
+import java.util.concurrent.TimeUnit
 
 /**
- * Displays a list of photos in grid layout, with search available in the menu.
+ * Displays a list of [Photo]s in grid layout, with search available in the menu.
  * On larger devices in landscape mode, the view is split between the list (left)
  * and the detail view (right).
  *
@@ -29,60 +33,60 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class PhotosListActivity : AppCompatActivity() {
 
-    // keep track of whether we're in split view mode
-    private var twoPane: Boolean = false
-
-    private lateinit var adapter: PhotosListAdapter
-    private lateinit var gridView: RecyclerView
-    private lateinit var searchView: SearchView
-    private lateinit var progressView: View
-
     val viewModel: PhotosListViewModel by viewModels()
+
+    // keep track of whether we're in split view mode
+    private var splitView: Boolean = false
+
+    private lateinit var binding: ActivityPhotosListBinding
+    private lateinit var adapter: PhotosListAdapter
+    private lateinit var searchView: SearchView
+
+    private val disposables = CompositeDisposable()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_photos_list)
+        binding = ActivityPhotosListBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        if (findViewById<ViewGroup>(R.id.detail_container) != null) {
-            // The detail container view will be present only in the
-            // large-screen layouts (res/values-w900dp-land).
-            twoPane = true
-        }
+        // The detail container view will be present only in the
+        // large-screen layouts (res/values-w900dp-land).
+        splitView = findViewById<ViewGroup>(R.id.detail_container) != null
 
-        val toolbar: Toolbar = findViewById(R.id.toolbar)
-        setSupportActionBar(toolbar)
-        toolbar.title = title
+        // setup views
+        setSupportActionBar(binding.toolbar)
+        binding.toolbar.title = title
+        setupRecyclerView()
 
-        progressView = findViewById(R.id.horizontal_progress)
-
-        setupRecyclerView(findViewById(R.id.item_list))
-
+        // observe the view model
         viewModel.livePhotos.observe(this, { onPhotos(it) })
         viewModel.liveError.observe(this, { onError(it) })
         viewModel.liveBusy.observe(this, { onBusy(it) })
 
+        // fetch the photos
         viewModel.fetchPhotos()
+    }
+
+    override fun onDestroy() {
+        disposables.clear()
+        super.onDestroy()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_photos_list, menu)
-
         setupSearchView(menu.findItem(R.id.search_photos))
-
         return super.onCreateOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when (item.itemId) {
-            R.id.pexels_link -> startActivity(
-                Intent(
-                    Intent.ACTION_VIEW,
-                    Uri.parse("https://www.pexels.com")
-                )
-            )
+        return when (item.itemId) {
+            R.id.pexels_link -> {
+                // Pexels attribution - see: https://www.pexels.com/api/documentation/#guidelines
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(PEXELS_URL)))
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
         }
-
-        return super.onOptionsItemSelected(item)
     }
 
     private fun setupSearchView(searchItem: MenuItem) {
@@ -99,29 +103,40 @@ class PhotosListActivity : AppCompatActivity() {
             searchView.clearFocus()
         }
 
-        // listen for updates to the query text, so that we can make API requests as appropriate
-        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean {
-                searchView.clearFocus()
-                return false
-            }
+        // listen for updates to the search view query text, using RxJava to debounce the queries
+        val queryRx = Observable.create<String> { emit ->
+            searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+                override fun onQueryTextSubmit(query: String?): Boolean {
+                    // we already queried the API, so just close the keyboard here
+                    searchView.clearFocus()
+                    return false
+                }
 
-            override fun onQueryTextChange(newText: String?): Boolean {
-                viewModel.searchPhotos(newText ?: "")
-                return false
-            }
-        })
+                override fun onQueryTextChange(query: String?): Boolean {
+                    // emit the update to our subscriber
+                    emit.onNext(query ?: "")
+                    return false
+                }
+            })
+        }
+
+        // use RxJava to avoid API spamming (esp. with an attached keyboard)
+        // only the last query is honored (in between queries are dropped).
+        disposables.add(queryRx.debounce(300L, TimeUnit.MILLISECONDS)
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe { query -> viewModel.searchPhotos(query ?: "") }
+        )
     }
 
-    private fun setupRecyclerView(recyclerView: RecyclerView) {
-        this.gridView = recyclerView
+    private fun setupRecyclerView() {
+        val gridView = binding.photosContainer.photosLayout.photosList
 
         // setup the click listener for our list items; clicking will display the detail view
         val listener = object : PhotosListAdapter.ItemClickListener {
             override fun onClicked(holder: PhotosListAdapter.ViewHolder) {
                 val item = holder.data ?: return
                 val activity = this@PhotosListActivity
-                if (twoPane) {
+                if (splitView) {
                     val fragment = PhotoDetailFragment().apply {
                         arguments = Bundle().apply {
                             putString(PhotoDetailFragment.ARG_PHOTO, item.toJson())
@@ -155,9 +170,32 @@ class PhotosListActivity : AppCompatActivity() {
     }
 
     private fun onPhotos(items: List<Photo>) {
-        // TODO -- handle empty results
+        // handle empty search results
+        val emptySearch = items.isEmpty() && !viewModel.searchQuery.isNullOrEmpty()
+        binding.photosContainer.photosLayout.emptyView.setVisible(emptySearch)
 
-        adapter.submitList(items)
+        // check to see if our top item has changed. if so, we should scroll the list to top
+        val existingItem = adapter.currentList.getOrNull(0)
+        val newItem = items.getOrNull(0)
+        val shouldScrollToTop = existingItem?.id != newItem?.id
+
+        // pause boundary events if we need to scroll to top. this prevents us firing
+        // off premature requests for the next page due to transition scrolling
+        adapter.pauseCallback.set(shouldScrollToTop)
+
+        // update the adapter with the new list. ListAdapter will automatically handle
+        // animations for inserts, moves, deletes, etc.
+        adapter.submitList(items) {
+            if (!shouldScrollToTop) return@submitList // no-op early return
+
+            // scroll to top (on the next run loop) and un-pause the boundary callback
+            val gridView = binding.photosContainer.photosLayout.photosList
+            val layoutManager = gridView.layoutManager as LinearLayoutManager
+            gridView.post {
+                layoutManager.scrollToPosition(0)
+                adapter.pauseCallback.set(false)
+            }
+        }
     }
 
     private fun onError(error: Throwable?) {
@@ -167,15 +205,21 @@ class PhotosListActivity : AppCompatActivity() {
         viewModel.clearError()
 
         // notify the user of the problem
-        val coordinator = findViewById<CoordinatorLayout>(R.id.coordinator)
         SnackbarHelper.showErrorSnackbar(
             R.string.fetch_photos_error,
-            coordinator
+            binding.coordinator
         ) { viewModel.fetchMore() }
     }
 
     private fun onBusy(busy: Boolean) {
-        progressView.visibility = if (busy) View.VISIBLE else View.GONE
+        val bar = binding.progressLayout.horizontalProgressBar
+        if (busy) bar.show() else bar.hide()
+    }
+
+    @Suppress("unused")
+    companion object {
+        private val TAG = PhotosListActivity::class.simpleName
+        private const val PEXELS_URL = "https://www.pexels.com"
     }
 
 }
