@@ -65,6 +65,11 @@ class PhotosListActivity : AppCompatActivity() {
 
         // fetch the photos
         viewModel.fetchPhotos()
+
+        // if split view and it's the first run, show the (empty) details fragment
+        if (splitView && savedInstanceState == null) {
+            showDetailsFragment(null)
+        }
     }
 
     override fun onDestroy() {
@@ -128,6 +133,26 @@ class PhotosListActivity : AppCompatActivity() {
         )
     }
 
+    private fun showDetailsFragment(item: Photo?) {
+        if (!splitView) return
+        val fragment = PhotoDetailFragment().apply {
+            arguments = Bundle().apply {
+                putString(PhotoDetailFragment.ARG_PHOTO, item?.toJson())
+            }
+        }
+        supportFragmentManager
+            .beginTransaction()
+            .replace(R.id.detail_container, fragment)
+            .commit()
+    }
+
+    private fun showDetailsActivity(item: Photo?) {
+        val intent = Intent(this, PhotoDetailActivity::class.java).apply {
+            putExtra(PhotoDetailFragment.ARG_PHOTO, item?.toJson())
+        }
+        startActivity(intent)
+    }
+
     private fun setupRecyclerView() {
         val gridView = binding.photosContainer.photosLayout.photosList
 
@@ -135,22 +160,10 @@ class PhotosListActivity : AppCompatActivity() {
         val listener = object : PhotosListAdapter.ItemClickListener {
             override fun onClicked(holder: PhotosListAdapter.ViewHolder) {
                 val item = holder.data ?: return
-                val activity = this@PhotosListActivity
                 if (splitView) {
-                    val fragment = PhotoDetailFragment().apply {
-                        arguments = Bundle().apply {
-                            putString(PhotoDetailFragment.ARG_PHOTO, item.toJson())
-                        }
-                    }
-                    activity.supportFragmentManager
-                        .beginTransaction()
-                        .replace(R.id.detail_container, fragment)
-                        .commit()
+                    showDetailsFragment(item)
                 } else {
-                    val intent = Intent(activity, PhotoDetailActivity::class.java).apply {
-                        putExtra(PhotoDetailFragment.ARG_PHOTO, item.toJson())
-                    }
-                    activity.startActivity(intent)
+                    showDetailsActivity(item)
                 }
             }
         }

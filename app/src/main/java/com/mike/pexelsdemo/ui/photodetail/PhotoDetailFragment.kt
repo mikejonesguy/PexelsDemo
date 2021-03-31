@@ -125,6 +125,7 @@ class PhotoDetailFragment : Fragment() {
     }
 
     private fun handleEmpty() {
+        binding?.photoDetailProgress?.hide()
         binding?.emptyView?.setVisible(true)
     }
 
