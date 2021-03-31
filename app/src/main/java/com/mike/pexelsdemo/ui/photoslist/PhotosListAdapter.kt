@@ -23,7 +23,7 @@ import kotlin.math.roundToInt
  */
 class PhotosListAdapter(
     private val listener: ItemClickListener,
-    private val boundaryCallback: PagedList.BoundaryCallback<Photo>
+    private val boundaryCallback: PagedList.BoundaryCallback<Photo>,
 ) : ListAdapter<Photo, PhotosListAdapter.ViewHolder>(adapterDiffCallback) {
 
     // allows the view to pause boundary callback events during transition scrolling

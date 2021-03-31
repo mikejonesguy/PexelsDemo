@@ -2,6 +2,7 @@ package com.mike.pexelsdemo.injection
 
 import com.mike.pexelsdemo.data.PexelsApi
 import com.mike.pexelsdemo.helper.GsonHelper
+import com.mike.pexelsdemo.helper.RxScheduler
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -11,6 +12,9 @@ import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
 
+/**
+ * Dependency Injection module for providing dependencies for view model classes
+ */
 @Module
 @InstallIn(ViewModelComponent::class)
 object DataModule {
@@ -27,4 +31,5 @@ object DataModule {
 
         return retrofit.create(PexelsApi::class.java)
     }
+
 }

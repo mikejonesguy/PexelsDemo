@@ -35,6 +35,11 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
+
+    testOptions {
+        // see: https://developer.android.com/training/testing/unit-testing/local-unit-tests#mocking-dependencies
+        unitTests.returnDefaultValues = true
+    }
 }
 
 dependencies {
@@ -72,7 +77,11 @@ dependencies {
     implementation "com.github.piasy:FrescoImageViewFactory:$bigimage_version"
 
     // Testing
+    testImplementation "androidx.arch.core:core-testing:$arch_testing_version"
     testImplementation "junit:junit:$junit_version"
+    testImplementation "org.mockito:mockito-core:$mockito_version"
+    testImplementation "org.mockito:mockito-inline:$mockito_version"
+    testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:$mockito_kotlin_version"
     androidTestImplementation "androidx.test.ext:junit:$junit_ext_version"
     androidTestImplementation "androidx.test.espresso:espresso-core:$espresso_version"
 

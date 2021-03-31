@@ -24,13 +24,11 @@ class PhotoDetailActivity : AppCompatActivity() {
         binding = ActivityPhotoDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // configure the toolbar
+        // configure the toolbar - show the photographer in the title
+        val photog = photo?.photographer ?: getString(R.string.unknown)
+        binding.detailToolbar.title = getString(R.string.photo_by, photog)
         setSupportActionBar(binding.detailToolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-
-        // show the photographer in the toolbar subtitle
-        val photog = photo?.photographer ?: getString(R.string.unknown)
-        binding.detailToolbar.subtitle = getString(R.string.photo_by, photog)
 
         // savedInstanceState is non-null on fragment re-creation (from orientation change, etc)
         // we only want to add the fragment on the first run, not on config changes

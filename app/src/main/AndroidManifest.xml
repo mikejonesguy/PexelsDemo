@@ -24,7 +24,7 @@
         </activity>
         <activity
             android:name=".ui.photodetail.PhotoDetailActivity"
-            android:label="@string/title_photo_detail"
+            android:label=""
             android:parentActivityName=".ui.photoslist.PhotosListActivity"
             android:theme="@style/Theme.PexelsDemo.NoActionBar">
             <meta-data

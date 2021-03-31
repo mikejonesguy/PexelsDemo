@@ -6,7 +6,7 @@
     <string name="search">Search</string>
     <string name="app_info">App Info</string>
     <string name="search_photos_hint">Search for photos</string>
-    <string name="photo_by">Photo by: %s</string>
+    <string name="photo_by">By: %s</string>
     <string name="provided_by_pexels">Photos provided by Pexels</string>
     <string name="retry">Retry</string>
     <string name="fetch_photos_error">Unable to retrieve photos</string>

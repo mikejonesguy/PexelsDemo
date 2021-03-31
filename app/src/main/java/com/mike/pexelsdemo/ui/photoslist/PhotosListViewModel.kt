@@ -2,22 +2,29 @@ package com.mike.pexelsdemo.ui.photoslist
 
 import android.util.Log
 import androidx.annotation.MainThread
+import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.mike.pexelsdemo.data.PexelsDataSource
+import com.mike.pexelsdemo.helper.RxScheduler
 import com.mike.pexelsdemo.model.Photo
 import com.mike.pexelsdemo.model.PhotosResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
-import io.reactivex.schedulers.Schedulers
-import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
+
+/**
+ * [ViewModel] for the [PhotosListActivity]. Manages UI state and interactions with
+ * our data source.
+ */
 @HiltViewModel
-class PhotosListViewModel @Inject constructor(private val data: PexelsDataSource) : ViewModel() {
+class PhotosListViewModel @Inject constructor(
+    private val data: PexelsDataSource,
+    private val scheduler: RxScheduler,
+) : ViewModel() {
 
     // tracks whether we should show a progress bar
     private val _liveBusy: MutableLiveData<Boolean> = MutableLiveData()
@@ -35,13 +42,16 @@ class PhotosListViewModel @Inject constructor(private val data: PexelsDataSource
     var searchQuery: String? = null
 
     // our RxJava disposables (to be cleared when the view model is cleared)
-    private val disposables = CompositeDisposable()
+    @VisibleForTesting
+    val disposables = CompositeDisposable()
 
     // the latest in-flight request
-    private var lastFetch: Disposable? = null
+    @VisibleForTesting
+    var lastFetch: Disposable? = null
 
     // the latest response from the API
-    private var lastResponse: PhotosResponse? = null
+    @VisibleForTesting
+    var lastResponse: PhotosResponse? = null
 
     override fun onCleared() {
         super.onCleared()
@@ -74,8 +84,8 @@ class PhotosListViewModel @Inject constructor(private val data: PexelsDataSource
         }
 
         _liveBusy.value = page == 1 // show progress for page 1 only
-        val rx = op.subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
+        val rx = op.subscribeOn(scheduler.io())
+            .observeOn(scheduler.ui())
             .doFinally {
                 lastFetch = null
                 _liveBusy.postValue(false)
@@ -97,8 +107,8 @@ class PhotosListViewModel @Inject constructor(private val data: PexelsDataSource
      * list of all the data from each page since page 1. Also adds a "loading" item at the end
      * of the list if more pages are available.
      */
-    @MainThread
-    private fun processResponse(response: PhotosResponse) {
+    @VisibleForTesting
+    fun processResponse(response: PhotosResponse) {
         lastResponse = response
 
         // preserve the existing list when requesting additional pages (page > 1)
@@ -141,7 +151,8 @@ class PhotosListViewModel @Inject constructor(private val data: PexelsDataSource
     /**
      * Helper method to determine if we have more pages available to fetch
      */
-    private fun hasMore(): Boolean {
+    @VisibleForTesting
+    fun hasMore(): Boolean {
         val response = lastResponse ?: return true
         return !response.nextPage.isNullOrEmpty()
     }

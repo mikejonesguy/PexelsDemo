@@ -56,7 +56,7 @@ class PhotoDetailFragment : Fragment() {
         // for image loading via Fresco
         imageView.setImageViewFactory(FrescoImageViewFactory())
 
-        // listen for loader callback events, especially errors
+        // listen for loader callback events, specifically errors
         imageView.setImageLoaderCallback(object : ImageLoader.Callback {
             override fun onCacheHit(imageType: Int, image: File?) {}
             override fun onCacheMiss(imageType: Int, image: File?) {}
